@@ -375,6 +375,248 @@ void urutkanResep() {
     lihatKatalog();
 }
 
+void hapusResep() {
+    if (headKatalog == NULL) {
+        cout << "\nKatalog kosong.\n";
+        return;
+    }
+
+    string keyword;
+    cout << "\nMasukkan nama resep yang mau dihapus: ";
+    getline(cin >> ws, keyword);
+
+    NodeResep* current = headKatalog;
+    NodeResep* prev = NULL;
+
+    while (current != NULL && current->namaResep != keyword) {
+        prev = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        cout << "Resep ga ketemu.\n";
+        return;
+    }
+
+    // Unlink si resep dari SLL katalog
+    if (prev == NULL) { // Kalo head yang dihapus
+        headKatalog = current->next;
+        if (headKatalog == NULL) tailKatalog = NULL;
+    } else {
+        prev->next = current->next;
+        if (current->next == NULL) tailKatalog = prev; // update tail
+    }
+
+    // Penting! Looping buat bersihin memori DLL langkah-langkahnya dulu
+    NodeLangkah* stepCurrent = current->headLangkah;
+    while (stepCurrent != NULL) {
+        NodeLangkah* stepNext = stepCurrent->next;
+        delete stepCurrent; // Hapus node langkah
+        stepCurrent = stepNext;
+    }
+
+    // Baru hapus node resepnya
+    delete current;
+    cout << "Resep berhasil dihapus beserta langkah-langkahnya!\n";
+    
+    simpanKeFile(); // update state txt
+}
+
+// Fungsi bantuan buat update urutan nomor langkah setiap ada perubahan (insert/delete)
+void perbaruiNomorLangkah(NodeResep* target) {
+    NodeLangkah* temp = target->headLangkah;
+    int no = 1;
+    while (temp != NULL) {
+        temp->nomorLangkah = no;
+        temp = temp->next;
+        no++;
+    }
+}
+
+void editResep() {
+    if (headKatalog == NULL) {
+        cout << "\nKatalog kosong.\n";
+        return;
+    }
+
+    string keyword;
+    cout << "\nMasukkan nama resep yang mau diedit: ";
+    getline(cin >> ws, keyword);
+
+    NodeResep* target = headKatalog;
+    while (target != NULL) {
+        if (target->namaResep == keyword) break;
+        target = target->next;
+    }
+
+    if (target == NULL) {
+        cout << "Resep ga ketemu.\n";
+        return;
+    }
+
+    cout << "\n=== MENGEDIT RESEP: " << target->namaResep << " ===\n";
+    
+    cin.ignore();
+
+	string inputBuf;
+
+	cout << "Nama Baru (kosongkan & tekan enter jika gamau ubah): ";
+	getline(cin, inputBuf);
+
+	if (!inputBuf.empty()) {
+		target->namaResep = inputBuf;
+	}
+
+	cout << "Estimasi Waktu Baru (ketik 0 jika gamau ubah): ";
+	int waktuBaru;
+	cin >> waktuBaru;
+
+	if (waktuBaru != 0) {
+		target->estimasiWaktu = waktuBaru;
+	}
+
+    char editLangkah;
+    cout << "Mau masuk ke menu edit langkah-langkahnya? (y/n): ";
+    cin >> editLangkah;
+
+    if (editLangkah == 'y' || editLangkah == 'Y') {
+        int opsiLangkah;
+        do {
+            cout << "\n--- MENU EDIT LANGKAH (" << target->namaResep << ") ---\n";
+            cout << "1. Tampilkan Langkah Saat Ini\n";
+            cout << "2. Ubah Deskripsi Langkah\n";
+            cout << "3. Sisip Langkah di Awal (Head)\n";
+            cout << "4. Sisip Langkah di Akhir (Tail)\n";
+            cout << "5. Sisip Langkah di Tengah\n";
+            cout << "6. Hapus Langkah\n";
+            cout << "0. Selesai Edit Langkah\n";
+            cout << "Pilih opsi: ";
+            
+            if (!(cin >> opsiLangkah)) {
+                cin.clear();
+                cin.ignore(10000, '\n');
+                continue;
+            }
+
+            if (opsiLangkah == 1) {
+                NodeLangkah* temp = target->headLangkah;
+                if (temp == NULL) cout << "Langkah masih kosong.\n";
+                while (temp != NULL) {
+                    cout << "Langkah " << temp->nomorLangkah << ": " << temp->deskripsiLangkah << "\n";
+                    temp = temp->next;
+                }
+            } 
+            else if (opsiLangkah == 2) {
+                int no;
+                cout << "Nomor langkah yang mau diedit deskripsinya: ";
+                cin >> no;
+                NodeLangkah* cur = target->headLangkah;
+                while (cur != NULL && cur->nomorLangkah != no) cur = cur->next;
+                
+                if (cur != NULL) {
+                    cout << "Deskripsi lama: " << cur->deskripsiLangkah << "\n";
+                    cout << "Deskripsi baru: ";
+                    getline(cin >> ws, cur->deskripsiLangkah);
+                    cout << "Berhasil diubah!\n";
+                } else {
+                    cout << "Langkah " << no << " ga ketemu.\n";
+                }
+            }
+            else if (opsiLangkah >= 3 && opsiLangkah <= 5) {
+                // Bikin node baru dulu buat opsi 3, 4, 5
+                NodeLangkah* baru = new NodeLangkah();
+                cout << "Masukkan deskripsi langkah baru: ";
+                getline(cin >> ws, baru->deskripsiLangkah);
+                baru->next = NULL;
+                baru->prev = NULL;
+
+                if (opsiLangkah == 3) { 
+                    // Sisip di Awal (Insert Head)
+                    if (target->headLangkah == NULL) {
+                        target->headLangkah = target->tailLangkah = baru;
+                    } else {
+                        baru->next = target->headLangkah;
+                        target->headLangkah->prev = baru;
+                        target->headLangkah = baru;
+                    }
+                    cout << "Berhasil disisip di awal!\n";
+                } 
+                else if (opsiLangkah == 4) { 
+                    // Sisip di Akhir (Insert Tail)
+                    if (target->tailLangkah == NULL) {
+                        target->headLangkah = target->tailLangkah = baru;
+                    } else {
+                        target->tailLangkah->next = baru;
+                        baru->prev = target->tailLangkah;
+                        target->tailLangkah = baru;
+                    }
+                    cout << "Berhasil disisip di akhir!\n";
+                } 
+                else if (opsiLangkah == 5) { 
+                    // Sisip di Tengah (Insert After)
+                    int no;
+                    cout << "Mau disisipkan SETELAH langkah ke berapa?: ";
+                    cin >> no;
+                    
+                    NodeLangkah* cur = target->headLangkah;
+                    while (cur != NULL && cur->nomorLangkah != no) cur = cur->next;
+                    
+                    if (cur != NULL) {
+                        baru->next = cur->next;
+                        baru->prev = cur;
+                        
+                        if (cur->next != NULL) { // Kalo bukan disisip di paling ujung
+                            cur->next->prev = baru;
+                        } else {
+                            target->tailLangkah = baru; // Kalo ternyata disisip setelah tail
+                        }
+                        cur->next = baru;
+                        cout << "Berhasil disisipkan!\n";
+                    } else {
+                        cout << "Langkah patokan ga ketemu, batal sisip.\n";
+                        delete baru; // Jangan sampe memory leak
+                    }
+                }
+                perbaruiNomorLangkah(target); // Update urutan nomornya
+            }
+            else if (opsiLangkah == 6) {
+                int no;
+                cout << "Nomor langkah yang mau dihapus: ";
+                cin >> no;
+                
+                NodeLangkah* cur = target->headLangkah;
+                while (cur != NULL && cur->nomorLangkah != no) cur = cur->next;
+                
+                if (cur != NULL) {
+                    // Logic hapus Node DLL
+                    if (cur == target->headLangkah) {
+                        target->headLangkah = cur->next;
+                        if (target->headLangkah != NULL) target->headLangkah->prev = NULL;
+                        else target->tailLangkah = NULL; // Kalo node sisa 1 doang
+                    } 
+                    else if (cur == target->tailLangkah) {
+                        target->tailLangkah = cur->prev;
+                        if (target->tailLangkah != NULL) target->tailLangkah->next = NULL;
+                    } 
+                    else {
+                        // Hapus di tengah
+                        cur->prev->next = cur->next;
+                        cur->next->prev = cur->prev;
+                    }
+                    delete cur;
+                    cout << "Langkah berhasil dihapus!\n";
+                    perbaruiNomorLangkah(target); // Update urutan nomornya
+                } else {
+                    cout << "Langkah ga ketemu!\n";
+                }
+            }
+        } while (opsiLangkah != 0);
+    }
+
+    cout << "Resep berhasil diperbarui secara keseluruhan!\n";
+    simpanKeFile(); // Jangan lupa save perubahan ke txt
+}
+
 int main() {
     // pas aplikasi buka, langsung narik dari memory/file
     bacaDariFile(); 
