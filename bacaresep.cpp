@@ -455,8 +455,6 @@ void editResep() {
     }
 
     cout << "\n=== MENGEDIT RESEP: " << target->namaResep << " ===\n";
-    
-    cin.ignore();
 
 	string inputBuf;
 
