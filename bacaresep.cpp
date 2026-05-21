@@ -29,6 +29,9 @@ NodeResep* tailKatalog = NULL;
 // deklarasi fungsi
 void simpanKeFile();
 void bacaDariFile();
+bool cekDuplikatNama(string nama);
+void tambahResep();
+void lihatKatalog();
 
 // --- BAGIAN FILE ---
 // fungsi buat nyimpen semua linked list ke txt
@@ -216,6 +219,22 @@ void tambahResep() {
     simpanKeFile(); // update txt
 }
 
+void lihatKatalog() {
+    cout << "\n=== KATALOG RESEP ===\n";
+    if (headKatalog == NULL) {
+        cout << "Katalog masih kosong, belum ada resep.\n";
+        return;
+    }
+
+    NodeResep* temp = headKatalog;
+    int i = 1;
+    while (temp != NULL) {
+        cout << i << ". " << temp->namaResep << " (" << temp->estimasiWaktu << " menit)\n";
+        temp = temp->next;
+        i++;
+    }
+}
+
 int main() {
     // pas aplikasi buka, langsung narik dari memory/file
     bacaDariFile(); 
@@ -246,10 +265,10 @@ int main() {
 
         switch (pilihan) {
             // fungsi2nya ini
-            case 1: lihatKatalog(); break;
+            case 1: lihatKatalog(); break; //done
             case 2: cariResep(); break;
             case 3: urutkanResep(); break;
-            case 4: tambahResep(); break;
+            case 4: tambahResep(); break; //done
             case 5: editResep(); break;
             case 6: hapusResep(); break;
             case 0: cout << "Selamat tinggal!\n"; break;
