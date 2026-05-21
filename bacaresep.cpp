@@ -32,6 +32,7 @@ void bacaDariFile();
 bool cekDuplikatNama(string nama);
 void tambahResep();
 void lihatKatalog();
+void mulaiMemasak(NodeResep* resep);
 
 // --- BAGIAN FILE ---
 // fungsi buat nyimpen semua linked list ke txt
@@ -235,6 +236,49 @@ void lihatKatalog() {
     }
 }
 
+void mulaiMemasak(NodeResep* resep) {
+    if (resep->headLangkah == NULL) {
+        cout << "Resep ini belum punya langkah memasak!\n";
+        return;
+    }
+
+    NodeLangkah* current = resep->headLangkah;
+    int navigasi = 0;
+
+    // Looping navigasi DLL (cuma geser baca, ngga ubah data)
+    while (true) {
+        cout << "\n--- SEDANG MEMASAK: " << resep->namaResep << " ---\n";
+        cout << "Langkah ke-" << current->nomorLangkah << ": " << current->deskripsiLangkah << "\n";
+        
+        cout << "\nMenu Navigasi:\n";
+        if (current->next != NULL) cout << "1. Langkah Selanjutnya (Next)\n";
+        if (current->prev != NULL) cout << "2. Langkah Sebelumnya (Prev)\n";
+        cout << "3. Selesai Masak / Keluar\n";
+        
+        cout << "Pilih navigasi: ";
+        cin >> navigasi;
+
+        if (navigasi == 1) {
+            if (current->next != NULL) {
+                current = current->next;
+            } else {
+                cout << "[!] Ini udah langkah paling terakhir!\n";
+            }
+        } else if (navigasi == 2) {
+            if (current->prev != NULL) {
+                current = current->prev;
+            } else {
+                cout << "[!] Ini masih langkah pertama!\n";
+            }
+        } else if (navigasi == 3) {
+            cout << "Keluar dari mode memasak...\n";
+            break;
+        } else {
+            cout << "Pilihan ga valid bro, coba lagi.\n";
+        }
+    }
+}
+
 int main() {
     // pas aplikasi buka, langsung narik dari memory/file
     bacaDariFile(); 
@@ -269,7 +313,7 @@ int main() {
             case 2: cariResep(); break;
             case 3: urutkanResep(); break;
             case 4: tambahResep(); break; //done
-            case 5: editResep(); break;
+            case 5: mulaiMemasak(); break; //done
             case 6: hapusResep(); break;
             case 0: cout << "Selamat tinggal!\n"; break;
             default: cout << "Pilihan menu ga ada, ulangi.\n";
