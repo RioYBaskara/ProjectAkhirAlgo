@@ -139,6 +139,83 @@ void bacaDariFile() {
     fclose(file);
 }
 
+bool cekDuplikatNama(string nama) {
+    NodeResep* temp = headKatalog;
+    while (temp != NULL) {
+        if (temp->namaResep == nama) return true;
+        temp = temp->next;
+    }
+    return false;
+}
+
+void tambahResep() {
+    string nama;
+    int waktu;
+    
+    cout << "\n=== TAMBAH RESEP BARU ===\n";
+    cout << "Masukkan nama resep: ";
+    getline(cin >> ws, nama);
+
+    // Error handling: gaboleh duplikat
+    if (cekDuplikatNama(nama)) {
+        cout << "Gagal! Resep dengan nama '" << nama << "' udah ada.\n";
+        return;
+    }
+
+    cout << "Estimasi waktu masak (menit): ";
+    cin >> waktu;
+
+    // Bikin node resep baru
+    NodeResep* resepBaru = new NodeResep();
+    resepBaru->namaResep = nama;
+    resepBaru->estimasiWaktu = waktu;
+    resepBaru->headLangkah = NULL;
+    resepBaru->tailLangkah = NULL;
+    resepBaru->next = NULL;
+
+    cout << "\n-- Masukkan Langkah-langkah Memasak --\n";
+    cout << "(Ketik 'selesai' di deskripsi kalau udah beres)\n";
+    
+    int noLangkah = 1;
+    while (true) {
+        string deskripsi;
+        cout << "Langkah " << noLangkah << ": ";
+        getline(cin >> ws, deskripsi);
+
+        if (deskripsi == "selesai" || deskripsi == "Selesai") break;
+
+        // Bikin node langkah baru (DLL)
+        NodeLangkah* langkahBaru = new NodeLangkah();
+        langkahBaru->nomorLangkah = noLangkah;
+        langkahBaru->deskripsiLangkah = deskripsi;
+        langkahBaru->next = NULL;
+        langkahBaru->prev = NULL;
+
+        // Proses insert Tail buat langkah
+        if (resepBaru->headLangkah == NULL) {
+            resepBaru->headLangkah = langkahBaru;
+            resepBaru->tailLangkah = langkahBaru;
+        } else {
+            resepBaru->tailLangkah->next = langkahBaru;
+            langkahBaru->prev = resepBaru->tailLangkah;
+            resepBaru->tailLangkah = langkahBaru;
+        }
+        noLangkah++;
+    }
+
+    // Sambungin resep baru ke Katalog (SLL)
+    if (headKatalog == NULL) {
+        headKatalog = resepBaru;
+        tailKatalog = resepBaru;
+    } else {
+        tailKatalog->next = resepBaru;
+        tailKatalog = resepBaru;
+    }
+
+    cout << "Resep berhasil ditambah!\n";
+    simpanKeFile(); // update txt
+}
+
 int main() {
     // pas aplikasi buka, langsung narik dari memory/file
     bacaDariFile(); 
