@@ -22,6 +22,9 @@ struct NodeResep {
     NodeResep* next;
 };
 
+NodeResep* headKatalog = NULL;
+NodeResep* tailKatalog = NULL;
+
 int main(){
     cout << "coba";
 
