@@ -2,9 +2,28 @@
 
 using namespace std;
 
+struct NodeLangkah {
+    int nomorLangkah;
+    string deskripsiLangkah;
+
+    NodeLangkah* next;
+    NodeLangkah* prev;
+};
+
+struct NodeResep {
+    // informasi resep
+    string namaResep;
+    int estimasiWaktu;
+    
+    // untuk ngehubungin ke DLL Langkah
+    NodeLangkah* headLangkah;
+    NodeLangkah* tailLangkah;
+
+    NodeResep* next;
+};
+
 int main(){
     cout << "coba";
-    cout << "hai bas";
-    cout << "oke thaa dah ngertii";
+
     return 0;
 }
