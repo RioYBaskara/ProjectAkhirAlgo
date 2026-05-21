@@ -32,7 +32,9 @@ void bacaDariFile();
 bool cekDuplikatNama(string nama);
 void tambahResep();
 void lihatKatalog();
+void cariResep();
 void mulaiMemasak(NodeResep* resep);
+void urutkanResep();
 
 // --- BAGIAN FILE ---
 // fungsi buat nyimpen semua linked list ke txt
@@ -279,6 +281,100 @@ void mulaiMemasak(NodeResep* resep) {
     }
 }
 
+void cariResep() {
+    if (headKatalog == NULL) {
+        cout << "\nKatalog kosong, belum ada yang bisa dicari.\n";
+        return;
+    }
+
+    string keyword;
+    cout << "\nMasukkan nama resep yang dicari: ";
+    getline(cin >> ws, keyword);
+
+    NodeResep* temp = headKatalog;
+    bool ketemu = false;
+
+    // linear search biasa di SLL
+    while (temp != NULL) {
+        if (temp->namaResep == keyword) {
+            ketemu = true;
+            cout << "\nResep ketemu! >> " << temp->namaResep << " (" << temp->estimasiWaktu << " menit)\n";
+            
+            char gas;
+            cout << "Mau langsung mulai masak resep ini? (y/n): ";
+            cin >> gas;
+            if (gas == 'y' || gas == 'Y') {
+                mulaiMemasak(temp);
+            }
+            break;
+        }
+        temp = temp->next;
+    }
+
+    if (!ketemu) {
+        cout << "Resep '" << keyword << "' ngga ditemuin di katalog.\n";
+    }
+}
+
+void urutkanResep() {
+    if (headKatalog == NULL || headKatalog->next == NULL) {
+        cout << "\nKatalog masih kosong, belum perlu diurutkan.\n";
+        return;
+    }
+
+    int opsi;
+    cout << "\n=== URUTKAN RESEP ===\n";
+    cout << "1. Berdasarkan Nama (A-Z)\n";
+    cout << "2. Berdasarkan Estimasi Waktu (Tergancang ke Terlama)\n";
+    cout << "Pilih opsi: ";
+    cin >> opsi;
+
+    // pakai Bubble Sort simpel tapi tuker datanya aja biar pointer head/tail ga ribet
+    bool swapped = true;
+    while (swapped) {
+        swapped = false;
+        NodeResep* current = headKatalog;
+        
+        while (current->next != NULL) {
+            bool butuhTukar = false;
+            
+            if (opsi == 1) { // urut abjad
+                if (current->namaResep > current->next->namaResep) butuhTukar = true;
+            } else if (opsi == 2) { // urut waktu
+                if (current->estimasiWaktu > current->next->estimasiWaktu) butuhTukar = true;
+            }
+
+            if (butuhTukar) {
+                // tuker nama
+                string tempNama = current->namaResep;
+                current->namaResep = current->next->namaResep;
+                current->next->namaResep = tempNama;
+
+                // tuker estimasi waktu
+                int tempWaktu = current->estimasiWaktu;
+                current->estimasiWaktu = current->next->estimasiWaktu;
+                current->next->estimasiWaktu = tempWaktu;
+
+                // tuker pointer list langkah DLL nya
+                NodeLangkah* tempHeadLangkah = current->headLangkah;
+                current->headLangkah = current->next->headLangkah;
+                current->next->headLangkah = tempHeadLangkah;
+
+                NodeLangkah* tempTailLangkah = current->tailLangkah;
+                current->tailLangkah = current->next->tailLangkah;
+                current->next->tailLangkah = tempTailLangkah;
+
+                swapped = true;
+            }
+            current = current->next;
+        }
+    }
+    
+    cout << "Katalog berhasil diurutkan!\n";
+    simpanKeFile(); // update file karena posisi urutan berubah
+    lihatKatalog();
+}
+
 int main() {
     // pas aplikasi buka, langsung narik dari memory/file
     bacaDariFile(); 
@@ -310,10 +406,10 @@ int main() {
         switch (pilihan) {
             // fungsi2nya ini
             case 1: lihatKatalog(); break; //done
-            case 2: cariResep(); break;
-            case 3: urutkanResep(); break;
+            case 2: cariResep(); break; //done
+            case 3: urutkanResep(); break; //done
             case 4: tambahResep(); break; //done
-            case 5: mulaiMemasak(); break; //done
+            case 5: editResep(); break;
             case 6: hapusResep(); break;
             case 0: cout << "Selamat tinggal!\n"; break;
             default: cout << "Pilihan menu ga ada, ulangi.\n";
